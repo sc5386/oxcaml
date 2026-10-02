@@ -1,0 +1,16 @@
+name: OCaml tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  runtest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 4.14.0
+      - run: opam install --yes dune core ppx_jane
+      - run: opam exec -- dune runtest
