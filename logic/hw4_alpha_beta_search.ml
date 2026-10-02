@@ -1,105 +1,101 @@
 open! Core
 open Hw2_tictactoe_logic
 
-let heuristic_value (node : Game_state.t) =
-  match node.decision with
-  | Stalemate -> 0
-  | In_progress _ ->
-    (* For more complex games, like Gomoku/connect6, we should have here a heuristic
-       function that scores how good this state for player X, i.e., the higher the number
-       the better it is for X. *)
-    0
-  | Winner player_kind ->
-    (match player_kind with
-     | X -> Int.max_value
-     | O -> Int.min_value)
+let ranks =
+  [ Card.Rank.Three
+  ; Four
+  ; Five
+  ; Six
+  ; Seven
+  ; Eight
+  ; Nine
+  ; Ten
+  ; Jack
+  ; Queen
+  ; King
+  ; Ace
+  ; Two
+  ]
 ;;
 
-let children node ~(sort_by_whose_turn : Player_kind.t) =
-  let compare =
-    match sort_by_whose_turn with
-    | X -> Int.descending
-    | O -> Int.ascending
+let suits = [ Card.Clubs; Diamonds; Hearts; Spades ]
+
+let deck () =
+  let suited_cards =
+    List.concat_map suits ~f:(fun suit ->
+      List.concat_map ranks ~f:(fun rank ->
+        List.init 2 ~f:(fun _ -> ({ Card.rank; suit } : Card.t))))
   in
-  let moves = Game_state.get_all_moves node in
-  List.filter_map moves ~f:(fun move -> Game_state.make_move node move |> Result.ok)
-  (* Sorting the children by heuristic values gives the best alpha-beta pruning. *)
-  |> List.sort ~compare:(Comparable.lift ~f:heuristic_value compare)
+  let jokers =
+    [ { Card.rank = Small_joker; suit = Black_joker }
+    ; { Card.rank = Small_joker; suit = Black_joker }
+    ; { Card.rank = Big_joker; suit = Red_joker }
+    ; { Card.rank = Big_joker; suit = Red_joker }
+    ]
+  in
+  suited_cards @ jokers
 ;;
 
-(*=
-https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning
-
-function alpha_beta(node, depth, α, β, maximizing_player) is
-    if depth == 0 or node is terminal then
-        return the heuristic value of node
-    if maximizing_player then
-        value := −∞
-        for each child of node do
-            value := max(value, alpha_beta(child, depth − 1, α, β, FALSE))
-            if value ≥ β then
-                break (* β cutoff *)
-            α := max(α, value)
-        return value
-    else
-        value := +∞
-        for each child of node do
-            value := min(value, alpha_beta(child, depth − 1, α, β, TRUE))
-            if value ≤ α then
-                break (* α cutoff *)
-            β := min(β, value)
-        return value
-
-
-alphabeta(origin, depth, −∞, +∞, TRUE)
-*)
-let rec alpha_beta (node : Game_state.t) depth alpha beta =
-  match node.decision with
-  | In_progress { whose_turn } when depth > 0 ->
-    (match whose_turn with
-     | X ->
-       List.fold_until
-         (children node ~sort_by_whose_turn:whose_turn)
-         ~init:(Int.min_value, alpha)
-         ~finish:(fun (value, _alpha) -> value)
-         ~f:(fun (value, alpha) child ->
-           let value = Int.max value (alpha_beta child (depth - 1) alpha beta) in
-           let alpha = Int.max alpha value in
-           if value >= beta then Stop value else Continue (value, alpha))
-     | O ->
-       List.fold_until
-         (children node ~sort_by_whose_turn:whose_turn)
-         ~init:(Int.max_value, beta)
-         ~finish:(fun (value, _beta) -> value)
-         ~f:(fun (value, beta) child ->
-           let value = Int.min value (alpha_beta child (depth - 1) alpha beta) in
-           let beta = Int.min beta value in
-           if value <= alpha then Stop value else Continue (value, beta)))
-  | _ -> heuristic_value node
+let shuffled_deck () =
+  let cards = deck () |> Array.of_list in
+  for index = Array.length cards - 1 downto 1 do
+    let other_index = Random.int (index + 1) in
+    let card = cards.(index) in
+    cards.(index) <- cards.(other_index);
+    cards.(other_index) <- card
+  done;
+  Array.to_list cards
 ;;
 
-let alpha_beta (node : Game_state.t) ~depth =
-  match node.decision with
-  | Winner _ | Stalemate -> None
-  | In_progress { whose_turn } ->
-    let moves = Game_state.get_all_moves node in
-    let moves_and_children =
-      List.filter_map moves ~f:(fun move ->
-        Game_state.make_move node move
-        |> Result.ok
-        |> Option.map ~f:(fun child -> move, child))
+let new_game ?seed () =
+  (match seed with
+   | None -> Random.self_init ()
+   | Some seed -> Random.init seed);
+  let cards = shuffled_deck () in
+  let north, cards = List.split_n cards 27 in
+  let east, cards = List.split_n cards 27 in
+  let south, west = List.split_n cards 27 in
+  Game_state.create ~north ~east ~south ~west
+;;
+
+let random_move state =
+  match Game_state.decision state with
+  | Decision.Game_over _ -> None
+  | In_progress ->
+    let hand = Game_state.hand_for state (Game_state.current_player state) in
+    let candidate_moves =
+      match Game_state.last_play state with
+      | None -> List.map hand ~f:(fun card -> Move.Play [ card ])
+      | Some [ last_card ] ->
+        let higher_singles =
+          List.filter hand ~f:(fun card ->
+            Card.Rank.compare card.rank last_card.rank > 0)
+          |> List.map ~f:(fun card -> Move.Play [ card ])
+        in
+        higher_singles @ [ Move.Pass ]
+      | Some _ -> [ Move.Pass ]
     in
-    let moves_and_children_and_values =
-      List.map moves_and_children ~f:(fun (move, child) ->
-        move, child, alpha_beta child (depth - 1) Int.min_value Int.max_value)
+    let legal_moves =
+      List.filter candidate_moves ~f:(fun move ->
+        Game_state.make_move state move |> Result.is_ok)
     in
-    let best_move =
-      (match whose_turn with
-       | X -> List.max_elt
-       | O -> List.min_elt)
-        moves_and_children_and_values
-        ~compare:(fun (_move, _child, v1) (_move, _child, v2) -> Int.compare v1 v2)
-      |> Option.map ~f:(fun (move, _child, _value) -> move)
-    in
-    best_move
+    if List.is_empty legal_moves
+    then None
+    else Some (List.nth_exn legal_moves (Random.int (List.length legal_moves)))
+;;
+
+let play_computers_until ~human_player state =
+  let rec loop state =
+    match Game_state.decision state with
+    | Decision.Game_over _ -> state
+    | In_progress when Player.equal (Game_state.current_player state) human_player -> state
+    | In_progress ->
+      (match random_move state with
+       | None -> state
+       | Some move ->
+         (match Game_state.make_move state move with
+          | Error _ -> state
+          | Ok next_state -> loop next_state))
+  in
+  loop state
 ;;

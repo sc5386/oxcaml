@@ -1,6 +1,6 @@
 (library
  (name tictactoe_logic_library)
- (modules hw1 hw2_tictactoe_logic)
+ (modules hw1 hw2_tictactoe_logic hw4_alpha_beta_search)
  (libraries core)
  (preprocess
   (pps ppx_jane)))

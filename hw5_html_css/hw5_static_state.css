@@ -1,113 +1,405 @@
-/*
-We want to have the game div in the middle of the screen.
+:root {
+  color-scheme: light;
+  --paper: #f3f4ec;
+  --ink: #18332b;
+  --muted: #64746d;
+  --felt: #17634b;
+  --felt-dark: #104c39;
+  --line: #d7ded6;
+  --red: #b73535;
+  --gold: #e7bc58;
+}
 
-height&width 100vh makes the body take the full viewport.
-[margin: 0] and [padding: 0]removes default margins&paddings.
-Flexbox centers it both horizontally and vertically
+* {
+  box-sizing: border-box;
+}
 
-It is possible to use instead:
-[display: grid; place-items: center;]
-The flexbox approach is probably more widely supported,
-while the Grid approach with place-items: center is more concise.
-*/
 body {
-  background-color: rgb(250, 250, 250);
+  min-width: 320px;
+  min-height: 100vh;
   margin: 0;
-  padding: 0;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  position: fixed !important;
+  padding: 22px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+button {
+  font: inherit;
+}
+
+.app-shell {
+  width: min(1180px, 100%);
+  min-height: calc(100vh - 44px);
+  margin: 0 auto;
   display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.eyebrow,
+.trick-caption,
+.seat-role {
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.eyebrow {
+  margin-bottom: 3px;
+  color: var(--muted);
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-weight: 600;
+}
+
+h1 {
+  font-size: 34px;
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: 22px;
+}
+
+.new-game-button,
+.action-button {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.new-game-button {
+  border-color: #bac8bf;
+  background: transparent;
+  color: var(--ink);
+}
+
+.new-game-button:hover {
+  background: #e7ebe2;
+}
+
+.game-layout {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.table-area {
+  display: grid;
+  grid-template-rows: auto minmax(190px, 1fr) auto;
+  gap: 15px;
+  min-height: 390px;
+  padding: 22px clamp(12px, 4vw, 48px);
+  border: 1px solid var(--felt-dark);
+  border-radius: 8px;
+  background-color: var(--felt);
+  background-image: repeating-linear-gradient(135deg, transparent 0 14px, rgb(255 255 255 / 2%) 14px 15px);
+  color: #f6f4e9;
+  box-shadow: 0 12px 30px rgb(20 53 41 / 12%);
+}
+
+.middle-row {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) minmax(220px, 2fr) minmax(100px, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+
+.seat {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 5px;
+  min-width: 0;
+  min-height: 72px;
+  color: rgb(246 244 233 / 75%);
+  text-align: center;
+}
+
+.active-seat {
+  color: #fff;
+}
+
+.seat-role {
+  color: var(--gold);
+}
+
+.seat-name {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.card-stack {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 48px;
+  margin-top: 2px;
+  border: 1px solid #e3d6aa;
+  border-radius: 4px;
+  background: #f8f4e7;
+  color: var(--felt-dark);
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 3px 3px 0 rgb(10 39 28 / 30%);
+}
+
+.turn-label {
+  color: var(--gold);
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.trick-area {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 14px;
+  min-height: 160px;
+  padding: 18px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 6px;
+  background: rgb(8 50 35 / 19%);
+  text-align: center;
+}
+
+.trick-caption {
+  color: rgb(246 244 233 / 72%);
+}
+
+.empty-trick {
+  color: rgb(246 244 233 / 60%);
+  font-size: 15px;
+}
+
+.table-cards,
+.hand-cards {
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  gap: 7px;
+}
+
+.table-card {
+  width: 42px !important;
+  height: 58px !important;
+  font-size: 15px !important;
+}
+
+.status-line {
+  min-height: 20px;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+}
+
+.hand-area {
+  padding: 18px 20px 15px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fffefa;
+  box-shadow: 0 5px 18px rgb(20 53 41 / 6%);
+}
+
+.hand-heading,
+.hand-heading > div:first-child,
+.action-row {
+  display: flex;
   align-items: center;
 }
-/*
-min(100vw, 100vh) ensures the square fits within both screen dimensions.
-If your game isn't square, you can change the aspect ratio, see [aspect-ratio: 1].
-We give it [position: relative] so that the inside elements can be [position:absolute].
-*/
-.game {
-  width: min(100vw, 100vh);
-  height: min(100vw, 100vh);
-  aspect-ratio: 1;
-  position: relative;
+
+.hand-heading {
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
 }
 
-/* To prevent long-press that will bring up copy-paste dialog.
-user-select: none prevents text selection
--webkit-touch-callout: none specifically prevents the iOS long-press callout
--webkit-tap-highlight-color: transparent removes tap highlights on mobile
-*/
-* {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-tap-highlight-color: transparent;
-  -moz-touch-callout: none;
-  -ms-touch-callout: none;
-  outline: 0; /* To prevent blue-box outline after click: http://stackoverflow.com/questions/21719306/getting-rid-of-a-blue-box-around-button-when-pressed */
-}
-textarea,
-input {
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
-  user-select: text !important;
+.hand-heading > div:first-child {
+  gap: 10px;
 }
 
-/* For tictactoe, to make a right/bottom border.
-E.g., to make:
-
-X| |
------
- | |
------
-O| |
-
-We add right&bottom borders to the top-left cell (with X),
-but only right borrder to the bottom-left cell (with O), etc.
-*/
-.border_right {
-  border-right: min(1vw, 1vh) solid black;
-}
-.border_bottom {
-  border-bottom: min(1vw, 1vh) solid black;
-}
-.row {
-  position: absolute;
-  left: 0%;
-  width: 100%;
-}
-.column {
-  position: absolute;
-  top: 0;
-  height: 100%;
+.hand-heading span {
+  color: var(--muted);
+  font-family: Arial, sans-serif;
+  font-size: 13px;
 }
 
-.max_size {
-  width: 100%;
-  height: 100%;
+.action-row {
+  gap: 8px;
 }
 
-svg {
-  width: 100%;
-  height: 100%;
+.primary-action {
+  background: var(--felt-dark);
+  color: white;
 }
 
-/* CSS animations to make the X/O appear slowly
-   (the opacity will change from 0.1 to 1 in 0.5s). */
-.slowly_appear {
-  animation: slowly_appear 0.5s linear;
+.primary-action:hover:not(.inactive-action) {
+  background: #0a3e2d;
 }
 
-@keyframes slowly_appear {
-  from {
-    opacity: 0.1;
+.secondary-action {
+  border-color: #bac8bf;
+  background: white;
+  color: var(--ink);
+}
+
+.secondary-action:hover:not(.inactive-action) {
+  background: #edf1eb;
+}
+
+.inactive-action {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.hand-cards {
+  justify-content: flex-start;
+  min-height: 90px;
+  padding: 4px 3px 10px;
+  overflow-x: auto;
+}
+
+.playing-card {
+  display: grid;
+  flex: 0 0 50px;
+  place-items: start center;
+  width: 50px;
+  height: 72px;
+  padding-top: 9px;
+  border: 1px solid #d9ddd7;
+  border-radius: 5px;
+  background: #fff;
+  box-shadow: 0 2px 4px rgb(24 51 43 / 12%);
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.red-card {
+  color: var(--red);
+}
+
+.black-card {
+  color: #202a25;
+}
+
+.playing-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 5px 10px rgb(24 51 43 / 18%);
+}
+
+.selected-card {
+  transform: translateY(-9px);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold), 0 5px 10px rgb(24 51 43 / 16%);
+}
+
+.selected-card:hover {
+  transform: translateY(-10px);
+}
+
+.feedback {
+  min-height: 18px;
+  margin-top: 4px;
+  color: var(--red);
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+}
+
+@media (max-width: 650px) {
+  body {
+    padding: 14px;
   }
-  to {
-    opacity: 1;
+
+  .app-shell {
+    min-height: calc(100vh - 28px);
+    gap: 13px;
+  }
+
+  .masthead {
+    align-items: flex-start;
+  }
+
+  h1 {
+    font-size: 30px;
+  }
+
+  .new-game-button {
+    min-height: 38px;
+    padding: 0 11px;
+  }
+
+  .table-area {
+    grid-template-rows: auto minmax(160px, 1fr) auto;
+    gap: 8px;
+    min-height: 340px;
+    padding: 12px 8px;
+  }
+
+  .middle-row {
+    grid-template-columns: minmax(55px, 0.7fr) minmax(145px, 2fr) minmax(55px, 0.7fr);
+    gap: 6px;
+  }
+
+  .seat-name {
+    font-size: 15px;
+  }
+
+  .seat-role {
+    font-size: 9px;
+    letter-spacing: 0.6px;
+  }
+
+  .trick-area {
+    min-height: 150px;
+    padding: 12px 7px;
+  }
+
+  .hand-area {
+    padding: 14px 12px 10px;
+  }
+
+  .hand-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .action-row {
+    width: 100%;
+  }
+
+  .action-button {
+    flex: 1;
+    padding: 0 10px;
+  }
+
+  .hand-cards {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 }
