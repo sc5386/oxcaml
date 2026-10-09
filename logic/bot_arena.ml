@@ -51,7 +51,7 @@ let advance t =
       | Heuristic -> AI.heuristic_move state, None
       | Random -> AI.random_move ~random:(Random.State.make [|t.seed; t.completed; t.steps|]) state, None in
     let elapsed = Clock.gettimeofday () -. before in
-    if Float.(elapsed > 2.) then failwith "An opponent exceeded the two-second decision limit";
+    if Float.(elapsed > 2.) then failwith (sprintf "%s took %.3fs, exceeding the two-second decision limit" (agent_name agent) elapsed);
     let move = Option.value_exn move in
     let game = Game_match.make_move t.game move |> Result.ok |> Option.value_exn in
     let stats = List.map t.stats ~f:(fun (p, stats) -> if not (Player.equal p player) then p, stats else

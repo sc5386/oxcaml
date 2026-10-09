@@ -21,7 +21,11 @@ Verified locally on 2026-10-09 using OCaml 4.14.2, Core/PPX Jane/Bonsai v0.16 an
 - Browser verification exercised independent seat selection, all three agent
   types, Start, Pause, single-step, Resume, automatic tribute/new rounds, and a
   six-round complete match ending at Ace. That browser run averaged over five
-  completed search depths; its longest search decision was 1.877s.
+  completed search depths; the final timing-corrected run completed 571 moves in six rounds,
+  with 43.148s of AI computation and 70.650s elapsed wall time. Its longest
+  decision was 1.456s. An earlier under-load browser check exposed an overshoot;
+  a larger return margin fixed the tested run, and errors now pause visibly
+  rather than causing an unhandled exception.
 - Bot arena exposes wins, moves, completed rounds, total AI time, elapsed wall time,
   per-seat total/mean/max time, search depth, nodes and cutoffs. Native custom-seat
   runner verification is recorded in the local mixed-agent report.

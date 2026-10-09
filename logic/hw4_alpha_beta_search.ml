@@ -185,7 +185,9 @@ let better_move_with_stats ?(time_limit = 1.9) ?(max_nodes = 320) ?(max_depth = 
     (* Iterative depths revisit the same prefixes. Cache their successors by
        move path so legal generation and ordering run once per prefix. This
        changes work, not the searched tree or minimax values. *)
-    let cutoff = start +. Float.max 0. (time_limit -. 0.1) in
+    (* JavaScript move generation is slower than native generation and a single
+       operation cannot be preempted. Keep a generous return margin below 2s. *)
+    let cutoff = start +. Float.max 0. (time_limit -. 0.5) in
     let check_time () = if Float.(Clock.gettimeofday () >= cutoff) then raise Search.Budget_exhausted in
     let successors = Hashtbl.Poly.create () in
     let children (state, path) = Hashtbl.find_or_add successors path ~default:(fun () ->
@@ -196,7 +198,7 @@ let better_move_with_stats ?(time_limit = 1.9) ?(max_nodes = 320) ?(max_depth = 
       check_time ();
       List.map moves ~f:(fun (_, move, next) -> move, (next, move :: path))) in
     let terminal (state, _) = match Game_state.decision state with Game_over _ -> true | In_progress -> false in
-    let remaining = Float.max 0. (time_limit -. (Clock.gettimeofday () -. start) -. 0.1) in
+    let remaining = Float.max 0. (time_limit -. (Clock.gettimeofday () -. start) -. 0.5) in
     let move, stats = Search.choose ~children
       ~maximizing:(fun (state, _) -> Player.same_team root_player (Game_state.current_player state))
       ~evaluate:(fun (state, _) -> evaluate ~root_player state) ~terminal ~now:Clock.gettimeofday

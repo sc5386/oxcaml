@@ -44,7 +44,8 @@ tribute, start new rounds and continue until an Ace match victory.
 
 **Pause**, **Resume** and **Step one action** let you inspect progression. The
 summary shows team wins, rounds, moves, per-seat total/mean/maximum computation
-time, completed search depths, nodes and cutoffs. Times exclude the browser's
+time, completed search depths, nodes and cutoffs. Elapsed wall time includes
+pauses. A simulation error pauses the run with a visible message so you can retry. Times exclude the browser's
 rendering interval. Refresh clears the in-memory simulation. A paused run keeps
 its original configuration; changed selections apply to a newly started run.
 

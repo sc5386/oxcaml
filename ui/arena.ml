@@ -7,18 +7,22 @@ module Arena = Bot_arena
 
 type 'a sexp_opaque = 'a
 type model = { configuration : (Player.t * Arena.agent) list; games : int; seed : int;
-               arena : Arena.t option sexp_opaque [@equal.ignore]; running : bool; revision : int }
+               arena : Arena.t option sexp_opaque [@equal.ignore]; running : bool; revision : int; failure : string }
 [@@deriving sexp, equal]
 module Model = struct type t = model [@@deriving sexp, equal] end
 module Action = struct type t = Tick | Set of model [@@deriving sexp_of] end
 let player_name p = Sexp.to_string [%sexp (p : Player.t)]
 let text = Vdom.Node.text
 let default_model = {configuration = [North, Minimax; East, Random; South, Minimax; West, Random];
-                     games = 1; seed = 0; arena = None; running = false; revision = 0}
+                     games = 1; seed = 0; arena = None; running = false; revision = 0; failure = ""}
 let next model = match model.arena with
   | None -> model
-  | Some arena -> let arena = Arena.step arena in
-    {model with arena = Some arena; running = model.running && not arena.finished; revision = model.revision + 1}
+  | Some arena ->
+    (try let arena = Arena.step arena in
+      {model with arena = Some arena; running = model.running && not arena.finished;
+        revision = model.revision + 1; failure = ""}
+     with error -> {model with running = false; revision = model.revision + 1;
+       failure = "Simulation paused: " ^ Exn.to_string error ^ ". Resume to retry the current action."})
 let component =
   let%sub model, inject = Bonsai.state_machine0 (module Model) (module Action) ~default_model
     ~apply_action:(fun ~inject:_ ~schedule_event:_ model action -> match action with
@@ -70,9 +74,9 @@ let component =
          (if model.running then Vdom.Attr.disabled else Vdom.Attr.empty); Vdom.Attr.on_change (fun _ value -> match Int.of_string_opt value with
            | Some seed -> set_model {model with seed} | None -> Vdom.Effect.Ignore)] ()];
        button "Start automated games" (fun () -> set_model {model with running = true;
-         arena = Some (Arena.create ~seed:model.seed ~games:model.games ~configuration:model.configuration ()); revision = model.revision + 1});
+         arena = Some (Arena.create ~seed:model.seed ~games:model.games ~configuration:model.configuration ()); revision = model.revision + 1; failure = ""});
        button "Pause" (fun () -> set_model {model with running = false});
        button "Resume" (fun () -> set_model {model with running = Option.exists model.arena ~f:(fun a -> not a.finished)});
        button "Step one action" (fun () -> if model.running then Vdom.Effect.Ignore else set_model (next model));
        Vdom.Node.p [text "Per-seat timing measures bot computation, excluding the browser's display interval. Elapsed wall time includes pauses. Keep this tab open while running; Pause takes effect after the current decision. Refresh clears the simulation."]]
-     @ stats)
+     @ (if String.is_empty model.failure then [] else [Vdom.Node.p [text model.failure]]) @ stats)
