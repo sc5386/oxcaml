@@ -403,3 +403,19 @@ h2 {
     overflow-y: hidden;
   }
 }
+.app-tabs { display: flex; gap: 12px; justify-content: center; padding: 16px; }
+.app-tabs button { padding: 12px 24px; border: 1px solid #7b9b94; border-radius: 8px; cursor: pointer; font: inherit; }
+.app-shell > label { display: inline-flex; flex-direction: column; gap: 8px; margin: 12px; }
+.app-shell select, .app-shell input { padding: 10px; border-radius: 6px; font: inherit; max-width: 220px; }
+.app-shell table { width: 100%; border-collapse: collapse; font-size: 14px; background: rgba(255,255,255,.09); }
+.app-shell th, .app-shell td { text-align: left; padding: 12px 8px; border-bottom: 1px solid #77998a; }
+@media(max-width: 700px) { .app-shell table { display: block; overflow-x: auto; } }
+.arena-shell { display: block; font-family: Arial, sans-serif; }
+.arena-shell p { line-height: 1.5; margin: 16px 0; }
+.arena-config { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 16px; margin: 24px 0; }
+.arena-config label { display: flex; flex-direction: column; gap: 8px; }
+.arena-config select { width: 100%; max-width: none; }
+.arena-shell > .action-button { margin: 8px 8px 8px 0; }
+.arena-shell table { background: #fff; border: 1px solid var(--line); margin-top: 20px; }
+.arena-shell th { background: #e5ebe3; }
+@media(max-width: 800px) { .arena-config { grid-template-columns: repeat(2, minmax(130px, 1fr)); } }

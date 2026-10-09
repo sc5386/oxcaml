@@ -1,10 +1,94 @@
-Guandan tournament: 1000 seeded COMPLETE MATCHES
+Guandan: 1,000 COMPLETE MATCHES, seeds 0–999
+AI: iterative-deepening team minimax with alpha-beta pruning
+Default search bounds: 320 nodes, depth 6, 1.9-second allowance with return margin.
+Four disjoint 250-match seed ranges ran concurrently. Teams alternate seats.
+Every match progressed from Two to an Ace winner, including tribute and returns.
+Search-team wins: 1000
+Random-team wins: 0
+Rounds completed: 7767
+Legal moves applied: 811758
+Search decisions: 390554
+Mean completed search depth: 5.1824
+Alpha-beta cutoffs: 21100620
+Longest search decision: 0.130341 seconds
+Longest shard runtime: 363.51 seconds
+Sum of shard runtimes (concurrent, not wall time): 1433.00 seconds
+All four processes exited successfully. Every move was checked by the engine.
+This compares against the random baseline; it does not establish human-level strength.
+
+Individual shard reports follow:
+
+Seeds: 0 through 249
+Search decisions: 96499
+Sum of completed depths: 499559
+AI: iterative-deepening team minimax with alpha-beta pruning
+Node budget per decision: 320
+Mean completed search depth: 5.18
+Alpha-beta cutoffs: 5223901
+Guandan tournament: 250 seeded COMPLETE MATCHES
 Teams alternate seats; initial opener is randomized.
 Each match starts at level Two and ends at an Ace match victory.
 Includes promotion, tribute/returns, resistance and Ace failure demotion.
-Better opponent wins: 1000 (100.0%)
+Better opponent wins: 250 (100.0%)
 Random opponent wins: 0
-Rounds completed: 5385
-Legal moves applied: 446727
-Longest better-opponent decision: 0.008929 seconds
-Elapsed: 247.25 seconds
+Rounds completed: 1923
+Legal moves applied: 200765
+Longest better-opponent decision: 0.130341 seconds
+Elapsed: 356.74 seconds
+
+
+Seeds: 250 through 499
+Search decisions: 99564
+Sum of completed depths: 515980
+AI: iterative-deepening team minimax with alpha-beta pruning
+Node budget per decision: 320
+Mean completed search depth: 5.18
+Alpha-beta cutoffs: 5373406
+Guandan tournament: 250 seeded COMPLETE MATCHES
+Teams alternate seats; initial opener is randomized.
+Each match starts at level Two and ends at an Ace match victory.
+Includes promotion, tribute/returns, resistance and Ace failure demotion.
+Better opponent wins: 250 (100.0%)
+Random opponent wins: 0
+Rounds completed: 1975
+Legal moves applied: 206976
+Longest better-opponent decision: 0.115187 seconds
+Elapsed: 363.51 seconds
+
+
+Seeds: 500 through 749
+Search decisions: 99099
+Sum of completed depths: 514274
+AI: iterative-deepening team minimax with alpha-beta pruning
+Node budget per decision: 320
+Mean completed search depth: 5.19
+Alpha-beta cutoffs: 5341673
+Guandan tournament: 250 seeded COMPLETE MATCHES
+Teams alternate seats; initial opener is randomized.
+Each match starts at level Two and ends at an Ace match victory.
+Includes promotion, tribute/returns, resistance and Ace failure demotion.
+Better opponent wins: 250 (100.0%)
+Random opponent wins: 0
+Rounds completed: 1968
+Legal moves applied: 205849
+Longest better-opponent decision: 0.124327 seconds
+Elapsed: 362.44 seconds
+
+
+Seeds: 750 through 999
+Search decisions: 95392
+Sum of completed depths: 494185
+AI: iterative-deepening team minimax with alpha-beta pruning
+Node budget per decision: 320
+Mean completed search depth: 5.18
+Alpha-beta cutoffs: 5161640
+Guandan tournament: 250 seeded COMPLETE MATCHES
+Teams alternate seats; initial opener is randomized.
+Each match starts at level Two and ends at an Ace match victory.
+Includes promotion, tribute/returns, resistance and Ace failure demotion.
+Better opponent wins: 250 (100.0%)
+Random opponent wins: 0
+Rounds completed: 1901
+Legal moves applied: 198168
+Longest better-opponent decision: 0.130155 seconds
+Elapsed: 350.31 seconds

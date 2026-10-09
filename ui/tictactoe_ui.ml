@@ -293,9 +293,14 @@ let board model set_model =
 let app =
   let default_model = initial_model () in
   let%sub model, set_model = Bonsai.state ~default_model (module Model) in
-  let%arr model = model
-  and set_model = set_model in
-  board model set_model
+  let%sub arena_view = Arena.component in
+  let%sub arena_tab, set_arena_tab = Bonsai.state (module Bool) ~default_model:false in
+  let%arr model = model and set_model = set_model
+  and arena_view = arena_view and arena_tab = arena_tab and set_arena_tab = set_arena_tab in
+  Vdom.Node.div [Vdom.Node.div ~attrs:[Vdom.Attr.class_ "app-tabs"] [
+    Vdom.Node.button ~attrs:[Vdom.Attr.on_click (fun _ -> set_arena_tab false)] [text "Play Guandan"];
+    Vdom.Node.button ~attrs:[Vdom.Attr.on_click (fun _ -> set_arena_tab true)] [text "Bot arena"]];
+    if arena_tab then arena_view else board model set_model]
 ;;
 
 let () = Bonsai_web.Start.start app

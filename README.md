@@ -18,14 +18,54 @@ stronger computer opponent for the other seats.
   and termination. Match tests cover scoring, tribute, resistance, Ace victory
   and demotion; 40 complete matches check conservation through every phase.
   GitHub Actions runs these checks on pushes and PRs.
-- **HW4 — opponents:** `random_move` samples the legal move catalogue;
-  `better_move` ranks moves by finishing, shedding grouped cards, preserving
-  stronger cards and letting a partner retain the lead. It consults only its own
-  hand, public table state and other players' hand counts. Its default decision
-  budget is 1.9 seconds (accepted range 0–2 seconds); this is a heuristic opponent,
-  not minimax. Tests check legality and timing. The tournament runs 1,000 seeded
-  complete matches, alternates team seats, randomizes the initial opener, and
-  checks every move and the two-second limit until a match winner is reached.
+- **HW4 — opponents:** all three agents remain selectable: uniform random,
+  the original one-step heuristic, and **iterative-deepening team minimax with
+  alpha-beta pruning**. Search maximizes the acting team and minimizes the other
+  team, including turns skipped after a player finishes. It deepens through
+  complete iterations, keeps the last completed decision when interrupted, and
+  uses a heuristic only for leaf evaluation, move ordering and legal fallback.
+  Default limits are 320 visited nodes, depth 6 and 1.9 seconds, with a margin
+  for returning within two seconds. It samples unknown hands from the unseen
+  double deck using only the bot's own cards, public plays and hand counts;
+  it does not read actual opponents' hidden ranks. This is bounded search on a
+  sampled deal, not a solution of the full imperfect-information game.
+  Tests compare alpha-beta against exhaustive minimax, prove a future response
+  changes the greedy choice, observe pruning, verify deadline interruption and
+  check real Guandan legality and timing. The tournament runs 1,000 complete
+  matches from Two to Ace with alternating team seats.
+
+## Test bots in the Bot arena
+
+Open the website and select **Bot arena**. Choose **Random**, **Original heuristic**
+or **Minimax + alpha-beta** independently for North, East, South and West.
+North/South and East/West are partners. Choose 1–1,000 complete matches and a seed,
+then **Start automated games**. The bots automatically play every move, return
+tribute, start new rounds and continue until an Ace match victory.
+
+**Pause**, **Resume** and **Step one action** let you inspect progression. The
+summary shows team wins, rounds, moves, per-seat total/mean/maximum computation
+time, completed search depths, nodes and cutoffs. Times exclude the browser's
+rendering interval. Refresh clears the in-memory simulation. A paused run keeps
+its original configuration; changed selections apply to a newly started run.
+
+For a faster native batch with any four-seat configuration:
+
+```sh
+dune exec --profile release bin/guandan_arena.exe -- 10 minimax heuristic random minimax
+```
+
+Arguments are the match count followed by North, East, South and West. Valid
+agent keys are `random`, `heuristic` and `minimax`. It prints per-seat statistics.
+For the assignment's search-versus-random comparison:
+
+```sh
+dune exec --profile release bin/guandan_tournament.exe -- 1000
+```
+
+The tournament accepts an optional node budget and first seed after the match
+count, allowing disjoint seed ranges to run in parallel. Seeds reproduce the
+sampled hidden deals and random choices. Time interruption can change results
+on a slower or busy machine; timing measurements always depend on the machine.
 
 Legacy `tictactoe` filenames are retained to preserve the course module/build
 names; the game logic and HW1 fixtures are Guandan.
@@ -87,7 +127,7 @@ After setup:
 ```sh
 eval "$(opam env --switch=guandan)"
 dune runtest
-dune exec bin/guandan_tournament.exe -- 1000
+dune exec --profile release bin/guandan_tournament.exe -- 1000
 dune build --profile release ui/tictactoe_ui.bc.js
 cp _build/default/ui/tictactoe_ui.bc.js generated_js/
 python3 -m http.server 8000

@@ -106,6 +106,21 @@ module Game_state = struct
   let played_cards t = t.played_cards
   let initial_cards t = t.initial_cards
   let finished_players t = t.finish_order
+  (* Replace unknown cards for an information-set search, preserving every public
+     transition field (including passes and the current trick). The observer's
+     cards and every seat's public count must remain identical. *)
+  let with_sampled_hands t ~observer ~hands =
+    let hands = Player.Map.of_alist_exn hands in
+    List.iter Player.all ~f:(fun player ->
+      let original = hand_for t player and sampled = Map.find_exn hands player in
+      if List.length original <> List.length sampled then invalid_arg "Sampled hand count changed";
+      if Player.equal observer player && not (List.equal Card.equal original sampled) then
+        invalid_arg "Observer's hand changed");
+    let initial_cards = t.played_cards @ List.concat (Map.data hands) in
+    if List.exists initial_cards ~f:(fun card -> not (Card.valid card))
+       || List.exists (List.sort_and_group initial_cards ~compare:Card.compare)
+            ~f:(fun group -> List.length group > 2) then invalid_arg "Invalid sampled deck";
+    { t with hands; initial_cards }
   let is_finished t player = List.mem t.finish_order player ~equal:Player.equal
   let finish_if_needed finish_order =
     let double_finish = match finish_order with
@@ -181,37 +196,33 @@ module Game_state = struct
 
   let pattern_cache = List.map Card.Rank.ordinary ~f:(fun level -> level, build_patterns level)
   let patterns level = List.Assoc.find_exn pattern_cache level ~equal:Card.Rank.equal
-  let patterns_for_count level count = List.filter (patterns level) ~f:(fun (_, requirements, _) ->
-    List.sum (module Int) requirements ~f:snd = count)
-
-  let matches ~level cards (_, requirements, suit) =
-    let wilds, naturals = List.partition_tf cards ~f:(Card.is_wild ~level) in
-    let counts = List.fold naturals ~init:Card.Rank.Map.empty ~f:(fun m c ->
-      Map.update m c.rank ~f:(fun n -> Option.value n ~default:0 + 1)) in
-    let suit_ok = Option.for_all suit ~f:(fun s ->
-      List.for_all naturals ~f:(fun c -> Card.equal_suit s c.suit)) in
-    let natural_ok = Map.for_alli counts ~f:(fun ~key:rank ~data:count ->
-      match List.Assoc.find requirements rank ~equal:Card.Rank.equal with
-      | Some needed -> count <= needed | None -> false) in
-    let joker_ok = List.for_all requirements ~f:(fun (rank, count) ->
-      Card.Rank.natural_value rank <= 14 ||
-      (Map.find counts rank |> Option.value ~default:0) = count) in
-    suit_ok && natural_ok && joker_ok &&
-    List.sum (module Int) requirements ~f:snd = List.length cards &&
-    List.length wilds = List.sum (module Int) requirements ~f:(fun (r, n) ->
-      n - Option.value (Map.find counts r) ~default:0)
+  let pattern_counts_cache = List.map pattern_cache ~f:(fun (level, patterns) ->
+    level, Int.Map.of_alist_exn (List.init 10 ~f:(fun i ->
+      let count = i + 1 in count, List.filter patterns ~f:(fun (_, requirements, _) ->
+        List.sum (module Int) requirements ~f:snd = count))))
+  let patterns_for_count level count =
+    List.Assoc.find_exn pattern_counts_cache level ~equal:Card.Rank.equal
+    |> fun counts -> Map.find counts count |> Option.value ~default:[]
 
   let classify ~level (cards : Card.t list) =
     let count = List.length cards in
     if count = 1 then [ Single (Card.strength ~level (List.hd_exn cards).rank) ]
     else if count = 2 && List.for_all cards ~f:(Card.is_wild ~level) then [ Pair 15 ]
     else
-      List.filter_map (patterns_for_count level count) ~f:(fun ((combination, _, _) as pattern) ->
-        let ordinary_straight_allowed = match combination with
-          | Straight _ -> List.exists cards ~f:(Card.is_wild ~level)
-            || not (List.for_all cards ~f:(fun c -> Card.equal_suit c.suit (List.hd_exn cards).suit))
-          | _ -> true in
-        if ordinary_straight_allowed && matches ~level cards pattern then Some combination else None)
+      let wilds, naturals = List.partition_tf cards ~f:(Card.is_wild ~level) in
+      let counts = List.fold naturals ~init:Card.Rank.Map.empty ~f:(fun m c ->
+        Map.update m c.rank ~f:(fun n -> Option.value n ~default:0 + 1)) in
+      let wild_count = List.length wilds in
+      let one_suit = List.for_all naturals ~f:(fun c ->
+        Card.equal_suit c.suit (List.hd_exn cards).suit) in
+      List.filter_map (patterns_for_count level count) ~f:(fun (combination, requirements, suit) ->
+        let ordinary_allowed = match combination with Straight _ -> wild_count > 0 || not one_suit | _ -> true in
+        let suit_ok = Option.for_all suit ~f:(fun s -> List.for_all naturals ~f:(fun c -> Card.equal_suit s c.suit)) in
+        let natural_ok = Map.for_alli counts ~f:(fun ~key:rank ~data:n ->
+          Option.exists (List.Assoc.find requirements rank ~equal:Card.Rank.equal) ~f:(fun needed -> n <= needed)) in
+        let joker_ok = List.for_all requirements ~f:(fun (rank, n) ->
+          Card.Rank.natural_value rank <= 14 || Option.value (Map.find counts rank) ~default:0 = n) in
+        if ordinary_allowed && suit_ok && natural_ok && joker_ok then Some combination else None)
       |> List.dedup_and_sort ~compare:compare_combination
 
   let interpretations t cards = classify ~level:t.level cards
@@ -288,11 +299,14 @@ module Game_state = struct
       let cards = List.concat_map chosen ~f:(fun (_, _, cs) -> cs) @ List.take wilds deficit in
       if List.is_empty cards then None else Some (Move.Play cards)
     in
-    List.map hand ~f:(fun c -> Move.Play [ c ]) @ List.filter_map (patterns t.level) ~f:choose
+    List.map hand ~f:(fun c -> Move.Play [ c ]) @ List.filter_map (List.filter (patterns t.level) ~f:(fun (combination, _, _) ->
+      Option.for_all t.trick ~f:(fun (_, old) -> beats combination old))) ~f:choose
     |> List.dedup_and_sort ~compare:Move.compare
-  let legal_moves t = match t.decision with
+  let legal_successors t = match t.decision with
     | Game_over _ -> []
     | In_progress ->
       let moves = candidate_plays t @ if Option.is_some t.trick then [ Move.Pass ] else [] in
-      List.filter moves ~f:(fun move -> Result.is_ok (make_move t move))
+      List.filter_map moves ~f:(fun move -> match make_move t move with
+        | Error _ -> None | Ok next -> Some (move, next))
+  let legal_moves t = List.map (legal_successors t) ~f:fst
 end

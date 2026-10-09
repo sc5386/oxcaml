@@ -125,10 +125,14 @@ module Game_state : sig
   val played_cards : t -> Card.t list
   val initial_cards : t -> Card.t list
   val finished_players : t -> Player.t list
+  (** Search-only information-set sampling. Preserves the observer's hand, public
+      hand counts, trick, pass count, finish order and played cards. *)
+  val with_sampled_hands : t -> observer:Player.t -> hands:(Player.t * Card.t list) list -> t
 
   (** One legal representative per available rank pattern; identical deck copies
       and equivalent suit choices are collapsed. Not an exhaustive subset list. *)
   val interpretations : t -> Card.t list -> Combination.t list
   val legal_moves : t -> Move.t list
+  val legal_successors : t -> (Move.t * t) list
   val make_move : t -> Move.t -> (t, Move_error.t) Result.t
 end

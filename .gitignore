@@ -31,3 +31,4 @@ setup.log
 _opam/
 
 *.merlin
+_build_release/

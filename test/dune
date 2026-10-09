@@ -1,7 +1,7 @@
 (library
  (libraries core tictactoe_logic_library)
  (name tictactoe_test_library)
- (modules hw3_tictactoe_logic_test hw4_alpha_beta_search_test game_match_test)
+ (modules hw3_tictactoe_logic_test hw4_alpha_beta_search_test game_match_test bot_arena_test)
  (inline_tests)
  (preprocess
   (pps ppx_jane)))
