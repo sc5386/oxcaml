@@ -1,1 +1,1 @@
-val ok_exn : ('a, 'b) result -> 'a
+(* Tests are run by Dune's inline-test runner. *)

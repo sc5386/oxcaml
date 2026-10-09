@@ -1,0 +1,10 @@
+Guandan tournament: 1000 seeded COMPLETE MATCHES
+Teams alternate seats; initial opener is randomized.
+Each match starts at level Two and ends at an Ace match victory.
+Includes promotion, tribute/returns, resistance and Ace failure demotion.
+Better opponent wins: 1000 (100.0%)
+Random opponent wins: 0
+Rounds completed: 5385
+Legal moves applied: 446727
+Longest better-opponent decision: 0.008929 seconds
+Elapsed: 247.25 seconds

@@ -1,16 +1,29 @@
-name: OCaml tests
+name: Guandan homework checks
 
 on:
   push:
   pull_request:
 
 jobs:
-  runtest:
+  homework:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: ocaml/setup-ocaml@v3
         with:
-          ocaml-compiler: 4.14.0
-      - run: opam install --yes dune core ppx_jane
-      - run: opam exec -- dune runtest
+          ocaml-compiler: 4.14.2
+      - name: Install dependencies
+        run: opam install . --deps-only --with-test --yes
+      - name: Unit, expect and randomized transition tests
+        run: opam exec -- dune runtest
+      - name: Compare opponents in 1000 complete matches
+        run: opam exec -- dune exec bin/guandan_tournament.exe -- 1000 | tee tournament.txt
+      - name: Build playable browser game
+        run: opam exec -- dune build --profile release ui/tictactoe_ui.bc.js
+      - uses: actions/upload-artifact@v4
+        with:
+          name: guandan-demo-and-tournament
+          path: |
+            tournament.txt
+            _build/default/ui/tictactoe_ui.bc.js

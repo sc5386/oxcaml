@@ -1,0 +1,17 @@
+opam-version: "2.0"
+synopsis: "Complete-match Guandan homework engine and browser game"
+maintainer: "sc5386"
+authors: "Guandan course project contributors"
+license: "MIT"
+homepage: "https://github.com/sc5386/oxcaml"
+bug-reports: "https://github.com/sc5386/oxcaml/issues"
+depends: [
+  "ocaml" {>= "4.14.0" & < "5.0"}
+  "dune" {>= "3.19"}
+  "core" {>= "v0.16" & < "v0.17"}
+  "ppx_jane" {>= "v0.16" & < "v0.17"}
+  "bonsai" {>= "v0.16" & < "v0.17"}
+  "js_of_ocaml-compiler" {>= "5.1" & < "6.0"}
+]
+build: [["dune" "build" "@all"]]
+run-test: [["dune" "runtest"]]

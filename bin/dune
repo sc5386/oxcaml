@@ -1,0 +1,4 @@
+(executable
+ (name guandan_tournament)
+ (libraries core unix tictactoe_logic_library)
+ (preprocess (pps ppx_jane)))
